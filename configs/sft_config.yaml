@@ -1,0 +1,50 @@
+# Конфигурация для этапа SFT (Supervised Fine-Tuning)
+
+experiment_name: "sft-qwen2.5-coder-7b-spider"
+
+# Пути к данным
+data:
+  train_path: "data/processed/train"             # HF Dataset сохраненный через save_to_disk
+  val_path: "data/processed/val"                 # Валидационная выборка
+  prompt_format: "chatml"                        # Формат системных промптов и разметки
+
+# Параметры LoRA (PEFT)
+lora:
+  r: 16                                          # Ранг LoRA матрицы
+  lora_alpha: 32                                 # Масштабирующий коэффициент (обычно 2 * r)
+  lora_dropout: 0.05
+  bias: "none"
+  task_type: "CAUSAL_LM"
+  target_modules:
+    - "q_proj"
+    - "k_proj"
+    - "v_proj"
+    - "o_proj"
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"
+
+# Гиперпараметры обучения (HuggingFace TrainingArguments / SFTTrainer)
+training:
+  output_dir: "outputs/sft"
+  num_train_epochs: 3
+  per_device_train_batch_size: 2
+  per_device_eval_batch_size: 2
+  gradient_accumulation_steps: 8                 # Эффективный batch_size = 2 * 8 = 16
+  learning_rate: 0.00002                         # 2e-5 для LoRA
+  weight_decay: 0.01
+  warmup_ratio: 0.03
+  lr_scheduler_type: "cosine"
+  gradient_checkpointing: true                   # Экономит память VRAM ценой 20% скорости
+  bf16: true
+  fp16: false
+
+# Логирование и чекпоинты
+logging:
+  logging_steps: 10
+  eval_strategy: "steps"
+  eval_steps: 100
+  save_strategy: "steps"
+  save_steps: 100
+  save_total_limit: 2                            # Хранить только 2 лучших чекпоинта
+  report_to: "none"                              # "wandb" или "tensorboard" или "none"

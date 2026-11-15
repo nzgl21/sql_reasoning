@@ -1,0 +1,25 @@
+# configs/model.yaml
+
+model:
+  name: "Qwen/Qwen2.5-Coder-7B-Instruct"
+  cache_dir: null
+  torch_dtype: "bfloat16"
+  trust_remote_code: false
+  device_map: "auto"
+  max_seq_length: 2048
+  load_in_4bit: false
+
+lora:
+  r: 16
+  lora_alpha: 32
+  lora_dropout: 0.05
+  bias: "none"
+  task_type: "CAUSAL_LM"
+  target_modules:
+    - "q_proj"
+    - "k_proj"
+    - "v_proj"
+    - "o_proj"
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"

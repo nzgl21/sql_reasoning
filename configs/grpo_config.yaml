@@ -1,0 +1,58 @@
+# Конфигурация для этапа GRPO (Group Relative Policy Optimization / RLVR)
+
+experiment_name: "grpo-reasoning-text2sql"
+
+# Модель для инициализации (чекпоинт после SFT или базовая модель)
+model:
+  model_name_or_path: "outputs/sft/final_checkpoint"
+  torch_dtype: "bfloat16"
+
+# Пути к данным
+data:
+  train_path: "data/processed/train"
+  databases_dir: "data/raw/spider_data/database"
+
+# Параметры генерации кандидатов (Rollout / Sampling)
+generation:
+  num_generations: 4                             # G: сколько ответов генерировать на один вопрос
+  temperature: 0.7                               # Для разнообразия путей рассуждений
+  top_p: 0.95
+  max_prompt_length: 1024
+  max_completion_length: 1024                    # Включает блок <think> и финальный SQL
+
+# Верификаторы и система наград (Rewards)
+rewards:
+  # 1. Главная награда: выполнение в SQLite совпадает с эталоном
+  execution:
+    weight: 1.0
+    timeout_sec: 2.0                             # Таймаут на выполнение одного запроса
+  
+  # 2. Награда за соблюдение формата рассуждения (<think> ... </think> и ```sql ... ```)
+  format:
+    weight: 0.2
+    think_tag_required: true
+    code_block_required: true
+
+  # 3. Штраф / награда за синтаксическую валидность SQL (через sqlglot или SQLite)
+  syntax:
+    weight: 0.1
+
+# Гиперпараметры GRPO тренера (TRL GRPOTrainer / Verifiers)
+training:
+  output_dir: "outputs/grpo"
+  learning_rate: 0.000001                        # 1e-6 для RL
+  beta: 0.04                                     # Коэффициент регуляризации KL-дивергенции
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 8
+  num_train_epochs: 2
+  warmup_ratio: 0.1
+  lr_scheduler_type: "cosine"
+  bf16: true
+  gradient_checkpointing: true
+
+# Логирование
+logging:
+  logging_steps: 5
+  save_steps: 50
+  save_total_limit: 2
+  report_to: "none"
