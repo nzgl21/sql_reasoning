@@ -1,7 +1,7 @@
 # configs/model.yaml
 
 model:
-  name: "Qwen/Qwen2.5-Coder-7B-Instruct"
+  name: "Qwen/Qwen2.5-Coder-1.5B-Instruct"
   cache_dir: null
   torch_dtype: "bfloat16"
   trust_remote_code: false
@@ -10,8 +10,8 @@ model:
   load_in_4bit: false
 
 lora:
-  r: 16
-  lora_alpha: 32
+  r: 32
+  lora_alpha: 64
   lora_dropout: 0.05
   bias: "none"
   task_type: "CAUSAL_LM"
